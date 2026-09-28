@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.pk }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'orders:dashboard' %}">← All orders</a>
+
+<div class="page-head">
+    <h1>Order #{{ order.pk }}</h1>
+    <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+
+<div class="detail-layout">
+<div class="card">
+    <div class="detail-row"><div class="detail-label">Details</div><div class="detail-value">{{ order.description }}</div></div>
+    {% if order.pickup_location %}
+    <div class="detail-row"><div class="detail-label">Pick up from</div><div class="detail-value">{{ order.pickup_location }}</div></div>
+    {% endif %}
+    <div class="detail-row"><div class="detail-label">Deliver to</div><div class="detail-value">{{ order.delivery_address }}</div></div>
+    {% if order.fee %}
+    <div class="detail-row"><div class="detail-label">Fee</div><div class="detail-value">{{ order.fee }}</div></div>
+    {% endif %}
+    {% if user.is_delivery_agent %}
+    <div class="detail-row"><div class="detail-label">Customer</div><div class="detail-value">{{ order.customer.username }}{% if order.customer.phone_number %} · <a href="tel:{{ order.customer.phone_number }}">{{ order.customer.phone_number }}</a>{% endif %}</div></div>
+    <div style="margin-top:12px;"><a class="btn" href="{% url 'orders:update_status' order.pk %}">Update status / set fee</a></div>
+    {% endif %}
+</div>
+
+<div class="card chat-card">
+    <div class="chat-head">💬 Chat</div>
+    <div id="chat-log">
+        {% for message in order.messages.all %}
+            <div class="msg {% if message.sender_id == user.id %}mine{% else %}theirs{% endif %}">
+                <div class="bubble">{{ message.body }}</div>
+                <div class="meta">{{ message.sender.username }} · {{ message.created_at|date:"H:i" }}</div>
+            </div>
+        {% empty %}
+            <div class="chat-empty" id="chat-empty">No messages yet. Say hello 👋</div>
+        {% endfor %}
+    </div>
+    <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+        <button id="chat-send" type="button">Send</button>
+    </div>
+</div>
+
+</div>
+
+{{ order.pk|json_script:"order-id" }}
+{{ user.id|json_script:"user-id" }}
+<script>
+    const orderId = JSON.parse(document.getElementById('order-id').textContent);
+    const myId = JSON.parse(document.getElementById('user-id').textContent);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const chatSocket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/' + orderId + '/');
+
+    const chatLog = document.getElementById('chat-log');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+
+    function appendMessage(senderName, senderId, body, time) {
+        const empty = document.getElementById('chat-empty');
+        if (empty) empty.remove();
+
+        const wrap = document.createElement('div');
+        wrap.className = 'msg ' + (senderId === myId ? 'mine' : 'theirs');
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = body;          // plain text only, never HTML
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = senderName + ' \u00b7 ' + time;
+
+        wrap.appendChild(bubble);
+        wrap.appendChild(meta);
+        chatLog.appendChild(wrap);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        appendMessage(data.sender, data.sender_id, data.message, data.created_at);
+    };
+
+    chatSocket.onclose = function() {
+        console.warn('Chat socket closed');
+    };
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        chatSocket.send(JSON.stringify({ 'message': message }));
+        chatInput.value = '';
+    }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    chatLog.scrollTop = chatLog.scrollHeight;
+</script>
+{% endblock %}

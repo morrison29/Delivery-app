@@ -1,0 +1,8 @@
+Django
+channels
+channels_redis
+daphne
+dj-database-url
+redis
+whitenoise
+psycopg[binary]

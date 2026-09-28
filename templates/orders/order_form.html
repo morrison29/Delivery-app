@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}New order{% endblock %}
+{% block content %}
+<div class="card form-card">
+    <h1 class="title" style="margin-bottom:4px;">Place an order</h1>
+    <p class="subtle" style="margin-top:0;">Tell us what to pick up and where to bring it.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn-block">Submit order</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+[project]
+name = "delivery-app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "channels==4.3.2",
+    "channels-redis==4.3.0",
+    "daphne==4.2.3",
+    "dj-database-url==3.1.2",
+    "django==6.1.1",
+    "gunicorn==26.2.0",
+    "psycopg2-binary>=2.9.13",
+    "psycopg[binary]>=3.3.6",
+    "redis==8.1.0",
+    "whitenoise==6.12.0",
+]

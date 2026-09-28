@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My orders{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>My orders</h1>
+    <a class="btn" href="{% url 'orders:create' %}">+ New order</a>
+</div>
+
+<div class="order-grid">
+{% for order in orders %}
+    <a class="card order-card" href="{% url 'orders:detail' order.pk %}">
+        <div class="order-top">
+            <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+            <span class="subtle">#{{ order.pk }}</span>
+        </div>
+        <p class="order-desc">{{ order.description|truncatewords:20 }}</p>
+        <div class="order-meta">
+            <span>📍 {{ order.delivery_address }}</span>
+            <span>🕒 {{ order.created_at|date:"M d, H:i" }}</span>
+        </div>
+    </a>
+{% empty %}
+    <div class="card empty-state">
+        <div class="big">📦</div>
+        <p>You haven't placed any orders yet.</p>
+        <a class="btn" href="{% url 'orders:create' %}">Place your first order</a>
+    </div>
+{% endfor %}
+</div>
+{% endblock %}
