@@ -9,13 +9,15 @@ from .forms import OrderCreateForm, OrderStatusForm
 from .models import Order
 
 
-@login_required
 def dashboard(request):
     """
-    Routes to the right view based on who's logged in:
+    The front door of the site:
+    - visitors who aren't logged in see the landing page
     - delivery agent sees every order
     - customer sees only their own
     """
+    if not request.user.is_authenticated:
+        return render(request, 'landing.html')
     if request.user.is_delivery_agent:
         orders = Order.objects.all()
         template = 'orders/agent_dashboard.html'
