@@ -3,6 +3,7 @@ Django settings for config project.
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -16,10 +17,12 @@ SECRET_KEY = os.environ.get(
     'django-insecure-x=f71$0kecf%%r2nr%n0nsxqbu*rl#zf4rvk)l*8utf-zc*1)g',
 )
 
-# True when running on your own computer, False on Railway/Render.
-# You can override it by setting DEBUG=True or DEBUG=False in the environment.
+# Debug mode is ON only when you start the project with `manage.py runserver`
+# on your own computer. Anywhere else (Railway, Render, Vercel...) it is OFF,
+# unless you deliberately set DEBUG=True in the environment.
 ON_HOSTING_PLATFORM = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RENDER'))
-DEBUG = os.environ.get('DEBUG', 'False' if ON_HOSTING_PLATFORM else 'True') == 'True'
+_debug_env = os.environ.get('DEBUG')
+DEBUG = (_debug_env == 'True') if _debug_env is not None else ('runserver' in sys.argv)
 
 ALLOWED_HOSTS = [
     h.strip() for h in os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if h.strip()
